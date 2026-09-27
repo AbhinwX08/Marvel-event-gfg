@@ -199,8 +199,16 @@
     content:""; position:absolute; left:0; right:0; bottom:-6px; height:1px;
     background:var(--teal); box-shadow:0 0 8px var(--teal-dim);
   }
-  .nav-toggle{display:none; flex-direction:column; gap:5px; background:none; border:none; cursor:pointer; padding:8px;}
-  .nav-toggle span{width:22px; height:2px; background:var(--off-white);}
+  .nav-toggle{
+    display:none; flex-direction:column; justify-content:center; align-items:center; gap:5px;
+    background:none; border:none; cursor:pointer; padding:8px;
+    min-width:44px; min-height:44px;
+  }
+  .nav-toggle span{width:22px; height:2px; background:var(--off-white); transition:transform .28s ease, opacity .2s ease;}
+  .nav-toggle.is-open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
+  .nav-toggle.is-open span:nth-child(2){opacity:0;}
+  .nav-toggle.is-open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+  @media (prefers-reduced-motion: reduce){ .nav-toggle span{transition:none;} }
 
   /* ---------- SYSTEM STATUS PILL ---------- */
   .sys-status{
@@ -683,6 +691,12 @@
     font-family:'Orbitron', sans-serif;
   }
   .archive-tile:hover .archive-meta{transform:translateY(0); opacity:1;}
+  /* Touch / no-hover devices can't reveal hover-only captions — keep this
+     information visible by default so it isn't hidden behind an
+     interaction the device can't perform. */
+  @media (hover:none){
+    .archive-meta{transform:translateY(0); opacity:1;}
+  }
   .archive-tag{font-size:0.65rem; letter-spacing:0.14em; color:var(--teal); display:block;}
   .archive-status{font-size:0.58rem; letter-spacing:0.08em; color:rgba(241,241,241,0.4); white-space:nowrap;}
   .archive-meta-text{display:flex; flex-direction:column; gap:5px; min-width:0;}
@@ -838,10 +852,11 @@
     .nav-links{
       position:fixed; top:calc(64px + var(--safe-t)); right:0; height:calc(100svh - 64px - var(--safe-t));
       width:min(280px, 80vw); background:var(--black); flex-direction:column;
-      padding:40px 30px; gap:30px; border-left:1px solid var(--line);
+      padding:24px 26px; gap:6px; border-left:1px solid var(--line);
       transform:translateX(100%); transition:transform .3s ease;
     }
     .nav-links.open{transform:translateX(0);}
+    .nav-links a{display:block; padding:13px 4px; font-size:0.8rem;}
     .nav-toggle{display:flex;}
     .hero-meta{gap:26px;}
     .cta-meta{gap:24px;}
@@ -1024,7 +1039,7 @@
     <div class="sys-status" id="sysStatus" data-state="PRELAUNCH" aria-live="polite">
       <span class="sys-dot"></span><span class="sys-text" id="sysStatusText">SYSTEM ONLINE</span>
     </div>
-    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu"><span></span><span></span><span></span></button>
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false" aria-controls="navLinks"><span></span><span></span><span></span></button>
   </div>
 </nav>
 
@@ -1707,33 +1722,55 @@
 
   const toggle = document.getElementById('navToggle');
   const links = document.getElementById('navLinks');
-  toggle.addEventListener('click', () => links.classList.toggle('open'));
-  links.querySelectorAll('a').forEach(a => a.addEventListener('click', () => links.classList.remove('open')));
+  function setNavOpen(open){
+    links.classList.toggle('open', open);
+    toggle.classList.toggle('is-open', open);
+    toggle.setAttribute('aria-expanded', String(open));
+  }
+  toggle.addEventListener('click', () => setNavOpen(!links.classList.contains('open')));
+  links.querySelectorAll('a').forEach(a => a.addEventListener('click', () => setNavOpen(false)));
+  document.addEventListener('keydown', (e) => { if(e.key === 'Escape') setNavOpen(false); });
+  document.addEventListener('click', (e) => {
+    if(links.classList.contains('open') && !links.contains(e.target) && !toggle.contains(e.target)) setNavOpen(false);
+  });
 
   /* ---------- REGISTRATION PORTAL MODAL ---------- */
   (function(){
     const overlay = document.getElementById('regModalOverlay');
+    const modal = document.getElementById('regModal');
     const closeBtn = document.getElementById('regModalClose');
     const openers = document.querySelectorAll('#registerCta');
-    if(!overlay || !openers.length) return;
+    if(!overlay || !modal || !openers.length) return;
     let lastFocused = null;
 
+    function focusableEls(){
+      return Array.from(modal.querySelectorAll('button, a[href], [tabindex]:not([tabindex="-1"])'));
+    }
+    function onKeydown(e){
+      if(e.key === 'Escape'){ closeModal(); return; }
+      if(e.key === 'Tab'){
+        const items = focusableEls();
+        if(!items.length) return;
+        const first = items[0], last = items[items.length - 1];
+        if(e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
+        else if(!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
+      }
+    }
     function openModal(e){
       if(e) e.preventDefault();
       lastFocused = document.activeElement;
       overlay.classList.add('is-open');
       overlay.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
       closeBtn.focus();
       document.addEventListener('keydown', onKeydown);
     }
     function closeModal(){
       overlay.classList.remove('is-open');
       overlay.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
       document.removeEventListener('keydown', onKeydown);
       if(lastFocused) lastFocused.focus();
-    }
-    function onKeydown(e){
-      if(e.key === 'Escape') closeModal();
     }
     openers.forEach(el => el.addEventListener('click', openModal));
     closeBtn.addEventListener('click', closeModal);
