@@ -230,18 +230,21 @@
   .nav-inner{
     max-width:1280px; margin:0 auto;
     display:flex; align-items:center; justify-content:space-between;
-    padding:16px 28px;
+    padding:16px 28px; gap:20px;
   }
   .brand{
     font-family:'Orbitron', sans-serif; font-weight:700; font-size:0.95rem;
     letter-spacing:0.12em; color:var(--off-white);
-    display:flex; align-items:center; gap:10px;
+    display:flex; align-items:center; gap:10px; cursor:pointer;
+    flex-shrink:0; padding-right:22px; margin-right:2px;
+    border-right:1px solid var(--line);
   }
   .brand-mark{
     width:12px; height:12px; border:2px solid var(--teal);
     transform:rotate(45deg); box-shadow:0 0 10px var(--teal);
   }
-  .nav-links{display:flex; gap:36px; list-style:none;}
+  .nav-right{display:flex; align-items:center; gap:26px; min-width:0;}
+  .nav-links{display:flex; gap:28px; list-style:none;}
   .nav-links a{
     font-family:'Orbitron', sans-serif; font-size:0.7rem; font-weight:500;
     letter-spacing:0.14em; color:var(--off-white); opacity:0.75;
@@ -481,12 +484,35 @@
   .btn{
     font-family:'Orbitron', sans-serif; font-size:0.75rem; letter-spacing:0.12em;
     padding:16px 34px; border:1px solid var(--purple); cursor:pointer;
-    transition:all .25s ease; display:inline-block;
+    transition:transform .22s ease, box-shadow .3s ease, background .3s ease, border-color .3s ease;
+    display:inline-block; position:relative; will-change:transform;
   }
-  .btn-solid{background:var(--purple); color:var(--off-white); box-shadow:0 0 24px var(--purple-dim);}
-  .btn-solid:hover{background:#6d349f; box-shadow:0 0 34px var(--purple);}
-  .btn-ghost{border-color:var(--teal-dim); color:var(--teal);}
-  .btn-ghost:hover{border-color:var(--teal); box-shadow:0 0 20px var(--teal-dim);}
+  .btn-solid{
+    background:linear-gradient(180deg, rgba(91,42,134,0.55), rgba(15,8,20,0.9));
+    color:var(--off-white);
+    box-shadow:0 0 18px rgba(91,42,134,0.35), inset 0 0 12px rgba(62,214,196,0.06);
+    border-color:rgba(91,42,134,0.7);
+  }
+  .btn-solid:hover{
+    background:linear-gradient(180deg, rgba(91,42,134,0.7), rgba(10,6,14,0.95));
+    box-shadow:0 0 30px rgba(91,42,134,0.55), 0 0 46px rgba(62,214,196,0.12), inset 0 0 16px rgba(62,214,196,0.1);
+    border-color:var(--purple);
+    transform:translateY(-2px);
+  }
+  .btn-solid:active{
+    transform:translateY(0) scale(0.97);
+    box-shadow:0 0 36px rgba(91,42,134,0.7), inset 0 0 18px rgba(62,214,196,0.15);
+  }
+  .btn-ghost{
+    border-color:var(--teal-dim); color:var(--teal);
+    background:linear-gradient(180deg, rgba(10,10,10,0.4), rgba(10,10,10,0.7));
+  }
+  .btn-ghost:hover{
+    border-color:var(--teal); box-shadow:0 0 22px rgba(62,214,196,0.25), inset 0 0 10px rgba(62,214,196,0.08);
+    transform:translateY(-2px);
+  }
+  .btn-ghost:active{ transform:translateY(0) scale(0.97); }
+  @media (prefers-reduced-motion: reduce){ .btn-solid:hover, .btn-ghost:hover, .btn-solid:active, .btn-ghost:active{ transform:none; } }
 
   /* ---------- ABOUT ---------- */
   .mission-grid{
@@ -923,6 +949,13 @@
     .dept-grid{grid-template-columns:repeat(2,1fr);}
     .vm-grid{grid-template-columns:1fr;}
   }
+  @media (max-width:1180px){
+    .nav-inner{gap:14px; padding:16px 20px;}
+    .brand{padding-right:16px;}
+    .nav-right{gap:14px;}
+    .nav-links{gap:18px;}
+    .sys-status{display:none;}
+  }
   @media (max-width:720px){
     section{padding:100px 20px;}
     .nav-links{
@@ -1115,23 +1148,26 @@
 <nav aria-label="Primary">
   <div class="nav-inner">
     <div class="brand"><span class="brand-mark"></span>VIBRANIUM</div>
-    <ul class="nav-links" id="navLinks">
-      <li><a href="#home">HOME</a></li>
-      <li><a href="#about">ABOUT</a></li>
-      <li><a href="#timeline">TIMELINE</a></li>
-      <li><a href="#protocol">PROTOCOL</a></li>
-      <li><a href="#community">COMMUNITY</a></li>
-      <li><a href="#highlights">HIGHLIGHTS</a></li>
-      <li><a href="#faq">FAQ</a></li>
-      <li><a href="#register">REGISTER</a></li>
-    </ul>
-    <div class="sys-status" id="sysStatus" data-state="PRELAUNCH" aria-live="polite">
-      <span class="sys-dot"></span><span class="sys-text" id="sysStatusText">SYSTEM ONLINE</span>
+    <div class="nav-right">
+      <ul class="nav-links" id="navLinks">
+        <li><a href="#home">HOME</a></li>
+        <li><a href="#about">ABOUT</a></li>
+        <li><a href="#timeline">TIMELINE</a></li>
+        <li><a href="#protocol">PROTOCOL</a></li>
+        <li><a href="#judging">JUDGING</a></li>
+        <li><a href="#community">COMMUNITY</a></li>
+        <li><a href="#highlights">HIGHLIGHTS</a></li>
+        <li><a href="#faq">FAQ</a></li>
+        <li><a href="#register">REGISTER</a></li>
+      </ul>
+      <div class="sys-status" id="sysStatus" data-state="PRELAUNCH" aria-live="polite">
+        <span class="sys-dot"></span><span class="sys-text" id="sysStatusText">SYSTEM ONLINE</span>
+      </div>
+      <button class="audio-toggle" id="audioToggle" type="button" aria-pressed="false">
+        <span class="audio-wave"></span><span class="audio-text">AUDIO // OFF</span>
+      </button>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false" aria-controls="navLinks"><span></span><span></span><span></span></button>
     </div>
-    <button class="audio-toggle" id="audioToggle" type="button" aria-pressed="false">
-      <span class="audio-wave"></span><span class="audio-text">AUDIO // OFF</span>
-    </button>
-    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false" aria-controls="navLinks"><span></span><span></span><span></span></button>
   </div>
 </nav>
 
@@ -1859,11 +1895,11 @@
     return {
       setEnabled(v){ enabled = v; if(v) ensureCtx(); },
       isEnabled(){ return enabled; },
-      click(){ tone(1100, 0.045, 'square', 0.028); },          // interface click
-      pulse(){ tone(210, 0.24, 'sine', 0.05, 85); },            // CTA / vibranium energy activation
-      sweep(){ tone(650, 0.11, 'triangle', 0.022, 1300); },     // navigation sweep
-      scan(){ tone(480, 0.2, 'sine', 0.02, 850); },             // archive scan
-      discovery(){ tone(320, 0.3, 'sine', 0.03, 640); }         // easter-egg discovery tone
+      click(){ tone(1100, 0.045, 'square', 0.075); },          // interface click
+      pulse(){ tone(210, 0.24, 'sine', 0.13, 85); },            // CTA / vibranium energy activation
+      sweep(){ tone(650, 0.11, 'triangle', 0.058, 1300); },     // navigation sweep
+      scan(){ tone(480, 0.2, 'sine', 0.052, 850); },             // archive scan
+      discovery(){ tone(320, 0.3, 'sine', 0.08, 640); }         // easter-egg discovery tone
     };
   })();
 
@@ -2318,19 +2354,19 @@
       document.body.appendChild(dot);
       document.body.appendChild(ring);
 
-      let mx = window.innerWidth / 2, my = window.innerHeight / 2, rx = mx, ry = my, rafId = null, shown = false;
+      let mx = window.innerWidth / 2, my = window.innerHeight / 2, rx = mx, ry = my, shown = false;
 
       function loop(){
-        rx += (mx - rx) * 0.2;
-        ry += (my - ry) * 0.2;
-        dot.style.transform = `translate3d(${mx.toFixed(1)}px, ${my.toFixed(1)}px, 0)`;
+        rx += (mx - rx) * 0.45;
+        ry += (my - ry) * 0.45;
         ring.style.transform = `translate3d(${rx.toFixed(1)}px, ${ry.toFixed(1)}px, 0)`;
-        rafId = requestAnimationFrame(loop);
+        requestAnimationFrame(loop);
       }
+      requestAnimationFrame(loop);
       window.addEventListener('mousemove', (e) => {
         mx = e.clientX; my = e.clientY;
+        dot.style.transform = `translate3d(${mx.toFixed(1)}px, ${my.toFixed(1)}px, 0)`;
         if(!shown){ shown = true; dot.classList.add('is-visible'); ring.classList.add('is-visible'); }
-        if(!rafId) loop();
       }, {passive:true});
       window.addEventListener('mouseleave', () => {
         dot.classList.remove('is-visible'); ring.classList.remove('is-visible');
