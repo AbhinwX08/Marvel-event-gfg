@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>PROJECT VIBRANIUM — 48-Hour Mega Hackathon</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230A0A0A'/%3E%3Crect x='11' y='11' width='10' height='10' fill='none' stroke='%233ED6C4' stroke-width='2.4' transform='rotate(45 16 16)'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -662,13 +663,20 @@
   .archive-tile:hover .archive-media img,
   .archive-tile:hover .archive-placeholder{filter:brightness(1.1);}
   .archive-tile:nth-child(1){grid-column:span 2; grid-row:span 2;}
-  .archive-tile:nth-child(2){grid-column:span 2; grid-row:span 1;}
+  /* Archive 2's source photo is a tall portrait shot — a 2-wide/1-tall box
+     used to crop it down to a thin sliver. Giving it a portrait box instead
+     keeps the whole scene (both figures) readable. */
+  .archive-tile:nth-child(2){grid-column:span 1; grid-row:span 2;}
   .archive-tile:nth-child(3){grid-column:span 1; grid-row:span 1;}
-  .archive-tile:nth-child(4){grid-column:span 1; grid-row:span 1;}
+  /* Archive 4 is an extreme tall/narrow portrait (event poster held up
+     vertically). A tall single-column tile lets object-fit:cover keep
+     almost the entire frame instead of slicing off the top and bottom. */
+  .archive-tile:nth-child(4){grid-column:span 1; grid-row:span 4;}
   .archive-tile:nth-child(5){grid-column:span 1; grid-row:span 2;}
   .archive-tile:nth-child(6){grid-column:span 1; grid-row:span 1;}
   .archive-tile:nth-child(7){grid-column:span 2; grid-row:span 1;}
   .archive-tile:nth-child(8){grid-column:span 1; grid-row:span 1;}
+  .archive-tile:nth-child(2) .archive-media img{object-position:50% 38%;}
   .archive-media{position:absolute; inset:0; overflow:hidden;}
   .archive-media img{
     width:100%; height:100%; object-fit:cover; display:block; transition:transform .5s ease;
@@ -844,6 +852,8 @@
     .mission-grid{grid-template-columns:1fr;}
     .capability-grid{grid-template-columns:repeat(2,1fr);}
     .archive-grid{grid-template-columns:repeat(2,1fr); grid-auto-rows:120px;}
+    .archive-tile:nth-child(2){grid-row:span 3;}
+    .archive-tile:nth-child(4){grid-row:span 5;}
     .dept-grid{grid-template-columns:repeat(2,1fr);}
     .vm-grid{grid-template-columns:1fr;}
   }
