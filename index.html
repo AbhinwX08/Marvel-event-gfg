@@ -227,6 +227,19 @@
   @media (prefers-reduced-motion: reduce){ .sys-dot{animation:none !important;} }
   @media (max-width:480px){ .sys-status .sys-text{display:none;} .sys-status{padding:7px 9px; gap:0;} }
 
+  /* ---------- AUDIO TOGGLE (Vibranium cinematic sound layer, off by default) ---------- */
+  .audio-toggle{
+    display:flex; align-items:center; gap:7px; font-family:'Orbitron', sans-serif;
+    font-size:0.62rem; letter-spacing:0.1em; color:rgba(241,241,241,0.55);
+    border:1px solid var(--line); background:none; padding:7px 12px; white-space:nowrap;
+    cursor:pointer; transition:border-color .3s ease, color .3s ease, box-shadow .3s ease;
+  }
+  .audio-toggle:hover{border-color:var(--teal-dim); color:var(--off-white);}
+  .audio-wave{width:6px; height:6px; border:1.5px solid rgba(241,241,241,0.4); border-radius:50%; flex-shrink:0; transition:border-color .3s ease, box-shadow .3s ease;}
+  .audio-toggle.is-on{border-color:var(--teal); box-shadow:0 0 12px var(--teal-dim); color:var(--teal);}
+  .audio-toggle.is-on .audio-wave{border-color:var(--teal); box-shadow:0 0 8px var(--teal);}
+  @media (max-width:480px){ .audio-toggle .audio-text{display:none;} .audio-toggle{padding:7px 9px;} }
+
   /* ---------- SCROLL PROGRESS SYSTEM ---------- */
   .scroll-progress{
     position:fixed; right:16px; top:50%; transform:translateY(-50%); z-index:150;
@@ -1049,6 +1062,9 @@
     <div class="sys-status" id="sysStatus" data-state="PRELAUNCH" aria-live="polite">
       <span class="sys-dot"></span><span class="sys-text" id="sysStatusText">SYSTEM ONLINE</span>
     </div>
+    <button class="audio-toggle" id="audioToggle" type="button" aria-pressed="false">
+      <span class="audio-wave"></span><span class="audio-text">AUDIO // OFF</span>
+    </button>
     <button class="nav-toggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false" aria-controls="navLinks"><span></span><span></span><span></span></button>
   </div>
 </nav>
@@ -1738,11 +1754,65 @@
     toggle.setAttribute('aria-expanded', String(open));
   }
   toggle.addEventListener('click', () => setNavOpen(!links.classList.contains('open')));
-  links.querySelectorAll('a').forEach(a => a.addEventListener('click', () => setNavOpen(false)));
+  links.querySelectorAll('a').forEach(a => a.addEventListener('click', () => { setNavOpen(false); VibraniumAudio.sweep(); }));
   document.addEventListener('keydown', (e) => { if(e.key === 'Escape') setNavOpen(false); });
   document.addEventListener('click', (e) => {
     if(links.classList.contains('open') && !links.contains(e.target) && !toggle.contains(e.target)) setNavOpen(false);
   });
+
+  /* ---------- VIBRANIUM AUDIO SYSTEM ----------
+     Original, synthesized UI tones only (Web Audio oscillators) — no
+     sampled or copyrighted music, no autoplay. Off by default; the
+     person must opt in via the AUDIO toggle before anything can sound. */
+  const VibraniumAudio = (function(){
+    let ctx = null, enabled = false;
+    function ensureCtx(){
+      if(!ctx){
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if(!AC) return null;
+        ctx = new AC();
+      }
+      if(ctx.state === 'suspended') ctx.resume();
+      return ctx;
+    }
+    function tone(freq, duration, type, peak, glideTo){
+      if(!enabled) return;
+      const c = ensureCtx();
+      if(!c) return;
+      const osc = c.createOscillator();
+      const gain = c.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, c.currentTime);
+      if(glideTo) osc.frequency.exponentialRampToValueAtTime(glideTo, c.currentTime + duration);
+      gain.gain.setValueAtTime(0.0001, c.currentTime);
+      gain.gain.exponentialRampToValueAtTime(peak, c.currentTime + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + duration);
+      osc.connect(gain); gain.connect(c.destination);
+      osc.start(c.currentTime); osc.stop(c.currentTime + duration + 0.02);
+    }
+    return {
+      setEnabled(v){ enabled = v; if(v) ensureCtx(); },
+      isEnabled(){ return enabled; },
+      click(){ tone(1100, 0.045, 'square', 0.028); },          // interface click
+      pulse(){ tone(210, 0.24, 'sine', 0.05, 85); },            // CTA / vibranium energy activation
+      sweep(){ tone(650, 0.11, 'triangle', 0.022, 1300); },     // navigation sweep
+      scan(){ tone(480, 0.2, 'sine', 0.02, 850); },             // archive scan
+      discovery(){ tone(320, 0.3, 'sine', 0.03, 640); }         // easter-egg discovery tone
+    };
+  })();
+
+  const audioToggle = document.getElementById('audioToggle');
+  if(audioToggle){
+    audioToggle.addEventListener('click', () => {
+      const next = !VibraniumAudio.isEnabled();
+      VibraniumAudio.setEnabled(next);
+      audioToggle.classList.toggle('is-on', next);
+      audioToggle.setAttribute('aria-pressed', String(next));
+      audioToggle.querySelector('.audio-text').textContent = next ? 'AUDIO // ON' : 'AUDIO // OFF';
+      if(next) VibraniumAudio.click();
+    });
+  }
+  document.addEventListener('click', (e) => { if(e.target.closest('.btn-solid')) VibraniumAudio.pulse(); });
 
   /* ---------- REGISTRATION PORTAL MODAL ---------- */
   (function(){
@@ -1813,7 +1883,15 @@
   const revealTargets = document.querySelectorAll('.t-item, .day-marker, .protocol-item, .judge-card, .protocol-transition');
   if('IntersectionObserver' in window){
     const io = new IntersectionObserver((entries) => {
-      entries.forEach(entry => { if(entry.isIntersecting) entry.target.classList.add('in-view'); });
+      entries.forEach(entry => {
+        if(entry.isIntersecting){
+          entry.target.classList.add('in-view');
+          if(entry.target.classList.contains('t-item') && !entry.target.dataset.sounded){
+            entry.target.dataset.sounded = '1';
+            VibraniumAudio.scan();
+          }
+        }
+      });
     }, {threshold:0.35});
     revealTargets.forEach(el => io.observe(el));
   } else {
@@ -1851,6 +1929,7 @@
         item.classList.toggle('open', opening);
         trigger.setAttribute('aria-expanded', String(opening));
         panel.style.maxHeight = opening ? panel.scrollHeight + 'px' : null;
+        VibraniumAudio.click();
       });
     });
   }
@@ -2180,6 +2259,7 @@
       if(firedEggs.has(key)) return;
       firedEggs.add(key);
       revealToast(text);
+      VibraniumAudio.discovery();
     }
 
     // Egg 1 — click the nav brand mark
